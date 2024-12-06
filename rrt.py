@@ -136,7 +136,7 @@ def rrt(origin: np.ndarray, width: float, height: float, obstacles: List[Tuple[n
         q_rand = random_conf(width, height)
         nearest_index = nearest_vertex(q_rand, vertices[:num_verts,:])
         q_near = vertices[nearest_index]
-        q_s = extend(q_near, q_rand)
+        q_s = extend(q_near, q_rand, step_size=step_size)
         if not conf_free(q_s, obstacles) or not edge_free((q_rand, q_s), obstacles):
             continue
         else:
@@ -171,13 +171,25 @@ def backtrack(index: int, parents: np.ndarray) -> List[int]:
 
 width = 3
 height = 4
+padding = 0.25
 
-obstacles = [(np.array([1, 1]), 0.25), (np.array([2, 2]), 0.25), (np.array([1, 3]), 0.3)]
-goal = (np.array([2.5, 3.5]), 0.25)
+def far_enough(new_ob, obstacles, padding) -> bool:
+    for obstacle in obstacles:
+        if np.linalg.norm(new_ob[0] - obstacle[0]) <= 2 * padding: return False
+    return True
 
-origin = (0.1, 0.1)
+obstacles = []
+for i in range(5):
+    new_ob = (np.array(random_conf(width-0.5, height-1.5)+padding+np.array([0,0.5])), padding)
+    while not far_enough(new_ob, obstacles, padding):
+        new_ob = (np.array(random_conf(width-0.5, height-1.5)+padding+np.array([0,0.5])), padding)
+    obstacles.append(new_ob)
+# obstacles = [(np.array([1, 1]), 0.25), (np.array([2, 2]), 0.25), (np.array([1, 3]), 0.3)]
+goal = (np.array([1.5, 3.75]), 0.25)
 
-vertices, parents = rrt(origin, width, height, obstacles)
+origin = (1.5, 0.1)
+
+vertices, parents = rrt(origin, width, height, obstacles, step_size=1)
 
 index = nearest_vertex(goal[0], vertices)
 

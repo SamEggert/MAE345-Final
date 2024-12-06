@@ -137,7 +137,7 @@ def rrt(origin: np.ndarray, width: float, height: float, obstacles: List[Tuple[n
         nearest_index = nearest_vertex(q_rand, vertices[:num_verts,:])
         q_near = vertices[nearest_index]
         q_s = extend(q_near, q_rand, step_size=step_size)
-        if not conf_free(q_s, obstacles) or not edge_free((q_rand, q_s), obstacles):
+        if not conf_free(q_s, obstacles) or not edge_free((q_near, q_s), obstacles):
             continue
         else:
             vertices[num_verts] = q_s

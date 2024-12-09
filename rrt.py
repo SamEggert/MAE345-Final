@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from typing import List, Tuple
+import cflib
 
 def conf_free(q: np.ndarray, obstacles: List[Tuple[np.ndarray, float]]) -> bool:
     """
@@ -167,6 +168,68 @@ def backtrack(index: int, parents: np.ndarray) -> List[int]:
     return path
 
 
+# new sam code
+
+def points_along_line(point1: np.ndarray, point2: np.ndarray, increment_dist=10):
+    dist = np.linalg.norm(point2 - point1)
+    if increment_dist > dist:
+        return [point1, point2]
+    x1, y1 = point1
+    x2, y2 = point2
+
+    dx = x2-x1
+    dy = y2-y1
+
+    increment_vec = increment_dist / dist * np.array([dx, dy])
+
+    path = [point1]
+    while np.linalg.norm(path[-1]-point2) > increment_dist:
+        path.append(path[-1] + increment_vec)
+    path.append(point2)
+    return path
+
+
+def yaw(point1, point2):
+    x1, y1 = point1
+    x2, y2 = point2
+
+    dx = x2-x1
+    dy = y2-y1
+
+    raw_angle = np.degrees(np.arctan2(dy, dx))
+
+    final_angle = -(raw_angle - 90)
+
+    if final_angle > 180:
+        final_angle -= 360
+    elif final_angle <= -180:
+        final_angle += 360
+
+    return -final_angle
+
+def normal_to_crazy_coords(x, y, yaw):
+    return (y, -x, yaw)
+
+# def crazy_to_normal_coords(x, y, yaw):
+#     return (-y, x, yaw)
+
+
+
+def move_along_line(point1: np.ndarray, point2: np.ndarray):
+    # using cf.commander.send_position_setpoint()
+    yaw = np.arctan2(point2-point1)
+    babySteps = points_along_line(point1, point2)
+    while(babySteps.length != 0):
+        cflib.commander.send_position_setpoint(babySteps[0], yaw)
+        # if object detection is true
+        #   obstacles.append())
+        #   origin = babySteps[0]
+        #   vertices, parents = rrt(origin, width, height, obstacles, step_size=1)
+        #   break
+        # if you recalc rrt here, hoiw does that affect outer loop?
+        babySteps.pop(0)
+
+
 # testing!
 
 width = 3
@@ -199,6 +262,17 @@ if np.linalg.norm(vertices[index, :] - goal[0]) < 0.25:
 else:
     print('No path found!')
     path_verts = []
+
+
+# while (path_verts.length != 0):
+#     location = path_verts[0]
+#     next_location = path_verts[1]
+#     move_along_line(vertices[location], vertices[next_location])
+#     path_verts.pop(0)
+
+
+
+
 
 
 # plot
